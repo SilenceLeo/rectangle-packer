@@ -1,0 +1,13 @@
+{
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "indent": [true, "spaces", 4],
+    "no-console": false,
+    "object-literal-sort-keys": false,
+    "member-access": false,
+    "ordered-imports": false
+  },
+  "linterOptions": {
+    "exclude": ["**/*.json", "node_modules"]
+  }
+}

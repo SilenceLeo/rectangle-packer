@@ -1,0 +1,33 @@
+{
+    "name": "rectangle-packer",
+    "version": "0.0.1",
+    "description": "Rectangle Packer",
+    "main": "lib/index.js",
+    "types": "type/index.d.ts",
+    "repository": "git@github.com:SilenceLeo/rectangle-packer.git",
+    "author": "SilenceLeo <ly.liyang521@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "start": "tsc -w",
+        "build": "tsc",
+        "format": "prettier --write \"src/**/*.(t|j)s\"",
+        "lint": "tslint --fix -p tsconfig.json",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "devDependencies": {
+        "lint-staged": "^10.2.7",
+        "prettier": "^2.0.5",
+        "rollup": "^2.12.0",
+        "rollup-plugin-ts": "^1.2.24",
+        "rollup-plugin-uglify-es": "^0.0.1",
+        "tslint": "^6.1.2",
+        "tslint-config-prettier": "^1.18.0",
+        "typescript": "^3.9.3"
+    },
+    "lint-staged": {
+        "src/*.{js,ts}": [
+            "tslint",
+            "prettier --write"
+        ]
+    }
+}
