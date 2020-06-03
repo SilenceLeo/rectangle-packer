@@ -609,7 +609,7 @@ export function rectanglePacker(args: [number, number][]): IRectangle[] | null {
     const enclosing: IEnclosing = { width: 0, height: 0 };
 
     const rectList: IRectangle[] = args.map(([width, height], i) => {
-        if (!width || !height) throw new Error("aa");
+        if (!width || !height) throw new Error("Rectangle width and height must be an integer");
         return {
             width,
             height,
