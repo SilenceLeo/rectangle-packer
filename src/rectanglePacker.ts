@@ -19,13 +19,14 @@ interface IRectangle {
     height: number;
     x: number;
     y: number;
-    id?: number;
+    __id?: number;
+    [key: string]: any;
 }
 
 /**
  * 包围区域
  */
-interface IEnclosing {
+interface IRectangleSize {
     width: number;
     height: number;
 }
@@ -66,21 +67,31 @@ interface IPlacing {
     cols: ICol | null;
 }
 
-interface ICellRange {
-    startIndex: number;
-    endIndex: number;
-    overshoot: number;
-}
-
-interface IColRange {
+interface IRange {
     startIndex: number;
     endIndex: number;
     overshoot: number;
 }
 
 interface IRegion {
-    colR: IColRange;
-    cellR: ICellRange;
+    colR: IRange;
+    cellR: IRange;
+}
+
+function sortForAreaOrHeight(ar: IRectangleSize, br: IRectangleSize) {
+    const a = ar.width * ar.height;
+    const b = br.width * br.height;
+    if (a < b) {
+        return 1;
+    } else if (a > b) {
+        return -1;
+    } else if (ar.height > br.height) {
+        return -1;
+    } else if (ar.height < br.height) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -144,7 +155,7 @@ function freePlacing(placing: IPlacing): void {
  * @param height 高度
  * @param cellR 区域
  */
-function tryFitHeightInCol(col: ICol, height: number, cellR: ICellRange): 0 | 1 {
+function tryFitHeightInCol(col: ICol, height: number, cellR: IRange): 0 | 1 {
     /**
      * 循环列中的单元格
      * 查找高度大于 height 的连续未被占用的单元格序列。
@@ -217,15 +228,15 @@ function stepOffset(base: ICell | null, offset: number): ICell | null {
  * @param rectangle 矩形
  * @param reg 位置
  */
-function findRegion(placing: IPlacing, rectangle: IRectangle, reg: IRegion): number {
+function findRegion(placing: IPlacing, rectangle: IRectangle, reg: IRegion): 0 | 1 {
     // 遍历所有列
     for (let col = placing.cols, i = 0; col != null; col = col.nextCol, i++) {
-        const colR: IColRange = {
+        const colR: IRange = {
             startIndex: 0,
             endIndex: 0,
             overshoot: 0,
         };
-        const cellR: ICellRange = {
+        const cellR: IRange = {
             startIndex: 0,
             endIndex: 0,
             overshoot: 0,
@@ -268,7 +279,7 @@ function findRegion(placing: IPlacing, rectangle: IRectangle, reg: IRegion): num
     return FAIL;
 }
 
-function split(placing: IPlacing, reg: IRegion): number {
+function split(placing: IPlacing, reg: IRegion): 0 | 1 {
     let colSplitMe: ICol | null = null;
 
     // 水平拆分单元格
@@ -344,9 +355,9 @@ function split(placing: IPlacing, reg: IRegion): number {
  * @param rectangle 矩形
  * @param reg Region
  */
-function update(placing: IPlacing, rectangle: IRectangle, reg: IRegion): number {
-    if (!rectangle.id || rectangle.id === 0) {
-        console.error(`Error. Rectangle can't have id = ${rectangle.id}.\n`);
+function update(placing: IPlacing, rectangle: IRectangle, reg: IRegion): 0 | 1 {
+    if (!rectangle.__id || rectangle.__id === 0) {
+        console.error(`Error. Rectangle can't have id = ${rectangle.__id}.\n`);
         return FAIL;
     }
 
@@ -365,7 +376,7 @@ function update(placing: IPlacing, rectangle: IRectangle, reg: IRegion): number 
                     break;
                 }
                 if (k >= reg.cellR.startIndex) {
-                    cell.occupied = rectangle.id;
+                    cell.occupied = rectangle.__id;
                     if (!done) {
                         rectangle.x = x;
                         rectangle.y = y;
@@ -437,7 +448,7 @@ function doPlacing(list: IRectangle[], enclosingWidth: number, enclosingHeight: 
  * 计算所有矩形的宽高和
  * @param list 矩形列表
  */
-function sumWH(list: IRectangle[]): IEnclosing {
+function sumWH(list: IRectangle[]): IRectangleSize {
     const len = list.length;
     let width = 0;
     let height = 0;
@@ -455,7 +466,7 @@ function sumWH(list: IRectangle[]): IEnclosing {
  * 查找所有矩形中，宽度最大值与高度最大值
  * @param list 矩形列表
  */
-function maxWH(list: IRectangle[]): IEnclosing {
+function maxWH(list: IRectangle[]): IRectangleSize {
     const len = list.length;
     let width = 0;
     let height = 0;
@@ -511,7 +522,7 @@ function placingWidth(list: IRectangle[]): number {
  * @param list 矩形列表
  * @param en 初始区域
  */
-function areapackAlgorithm(list: IRectangle[], en: IEnclosing): number {
+function areapackAlgorithm(list: IRectangle[], en: IRectangleSize): 0 | 1 {
     const { width: maxWidth, height: maxHeight } = maxWH(list);
     const { width: sumWidth } = sumWH(list);
     let minWidth = -1;
@@ -602,28 +613,48 @@ function areapackAlgorithm(list: IRectangle[], en: IEnclosing): number {
     return SUCCESS;
 }
 
-export function rectanglePacker(args: [number, number][]): IRectangle[] | null {
-    if (!Array.isArray(args)) return null;
-    if (args.length === 0) return [];
+/**
+ * 打包给到的所有矩形
+ * @param rectangleSizes 带有宽高的矩形列表
+ * @param useExtend 是否在原来的数据基础上做扩展 默认false
+ */
+export function rectanglePacker(rectangleSizes: IRectangleSize[], useExtend: boolean = false): IRectangle[] {
+    if (!Array.isArray(rectangleSizes) || rectangleSizes.length === 0) return [];
 
-    const enclosing: IEnclosing = { width: 0, height: 0 };
+    let rectList: IRectangle[];
+    const enclosing: IRectangleSize = { width: 0, height: 0 };
 
-    const rectList: IRectangle[] = args.map(([width, height], i) => {
-        if (!width || !height) throw new Error("Rectangle width and height must be an integer");
-        return {
-            width,
-            height,
-            x: -1,
-            y: -1,
-            id: i + 1,
-        };
-    });
+    if (useExtend) {
+        (rectangleSizes as IRectangle[]).forEach((rs, i) => {
+            rs.x = -1;
+            rs.y = -1;
+            rs.__id = i + 1;
+        });
+        rectList = rectangleSizes as IRectangle[];
+    } else {
+        rectList = rectangleSizes.map(({ width, height }, i) => {
+            if (!width || !height) throw new Error("Rectangle width and height must be an integer");
+            return {
+                width,
+                height,
+                x: -1,
+                y: -1,
+                __id: i + 1,
+            } as IRectangle;
+        });
+    }
+
+    rectList.sort(sortForAreaOrHeight);
 
     const result = areapackAlgorithm(rectList, enclosing);
 
     if (result === FAIL) {
         console.error("Unexpected error in algorithm implementation");
-        return null;
+        return [];
     }
+
+    rectList.sort(({ __id: aid }, { __id: bid }) => ((aid as number) > (bid as number) ? 1 : -1));
+    rectList.forEach((rectangle) => delete rectangle.__id);
+
     return rectList;
 }
