@@ -14,19 +14,18 @@ enum TheState {
 /**
  * 矩形接口
  */
-interface IRectangle {
+export interface IRectangle {
     width: number;
     height: number;
-    x: number;
-    y: number;
+    x?: number;
+    y?: number;
     __id?: number;
-    [key: string]: any;
 }
 
 /**
  * 包围区域
  */
-interface IRectangleSize {
+export interface IRectangleSize {
     width: number;
     height: number;
 }
@@ -510,8 +509,8 @@ function placingWidth(list: IRectangle[]): number {
             console.error("Error. Can't compute placing_width if not all rectangles have been placed.\n");
             return -1;
         }
-        if (list[i].width + list[i].x >= width) {
-            width = list[i].width + list[i].x;
+        if (list[i].width + (list[i].x as number) >= width) {
+            width = list[i].width + (list[i].x as number);
         }
     }
     return width;
@@ -616,35 +615,22 @@ function areapackAlgorithm(list: IRectangle[], en: IRectangleSize): 0 | 1 {
 /**
  * 打包给到的所有矩形
  * @param rectangleSizes 带有宽高的矩形列表
- * @param useExtend 是否在原来的数据基础上做扩展 默认false
  */
-export function rectanglePacker(rectangleSizes: IRectangleSize[], useExtend: boolean = false): IRectangle[] {
+export function rectanglePacker<T extends IRectangle>(rectangleSizes: T[]): IRectangle[] {
     if (!Array.isArray(rectangleSizes) || rectangleSizes.length === 0) return [];
 
-    let rectList: IRectangle[];
-    const enclosing: IRectangleSize = { width: 0, height: 0 };
+    const enclosing: IRectangle = { width: 0, height: 0 };
 
-    if (useExtend) {
-        (rectangleSizes as IRectangle[]).forEach((rs, i) => {
-            rs.x = -1;
-            rs.y = -1;
-            rs.__id = i + 1;
-        });
-        rectList = rectangleSizes as IRectangle[];
-    } else {
-        rectList = rectangleSizes.map(({ width, height }, i) => {
-            if (!width || !height) throw new Error("Rectangle width and height must be an integer");
-            return {
-                width,
-                height,
-                x: -1,
-                y: -1,
-                __id: i + 1,
-            } as IRectangle;
-        });
-    }
-
-    rectList.sort(sortForAreaOrHeight);
+    const rectList = rectangleSizes.map(({ width, height }, i) => {
+        if (!width || !height) throw new Error("Rectangle width and height must be an integer");
+        return {
+            width,
+            height,
+            x: -1,
+            y: -1,
+            __id: i + 1,
+        };
+    });
 
     const result = areapackAlgorithm(rectList, enclosing);
 
@@ -653,8 +639,18 @@ export function rectanglePacker(rectangleSizes: IRectangleSize[], useExtend: boo
         return [];
     }
 
-    rectList.sort(({ __id: aid }, { __id: bid }) => ((aid as number) > (bid as number) ? 1 : -1));
     rectList.forEach((rectangle) => delete rectangle.__id);
 
     return rectList;
+}
+
+export function rectanglePackerMutation<T extends IRectangle>(rectangleSizes: T[]): T[] {
+    const list = rectanglePacker(rectangleSizes);
+
+    rectangleSizes.forEach((rs, i) => {
+        rs.x = list[i].x;
+        rs.y = list[i].y;
+    });
+
+    return rectangleSizes;
 }

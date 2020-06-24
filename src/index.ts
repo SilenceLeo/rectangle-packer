@@ -1,3 +1,2 @@
-import { rectanglePacker as rp } from "./rectanglePacker";
-export const rectanglePacker = rp;
+export { rectanglePacker, rectanglePackerMutation, IRectangle, IRectangleSize } from "./rectanglePacker";
 export default rectanglePacker;

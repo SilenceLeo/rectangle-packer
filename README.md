@@ -18,12 +18,13 @@ yarn add rectangle-packer
 
 ## 使用
 
-`rectanglePacker(rectangleSizes[, useExtend]);`
+`rectanglePacker(rectangleSizes);`
 
 ### 返回新的对象列表
 
 ```javascript
 import rectanglePacker from "rectangle-packer";
+
 const list = [
     { width: 105, height: 68 },
     { width: 117, height: 115 },
@@ -33,6 +34,7 @@ const list = [
 ];
 
 const packedList = rectanglePacker(list);
+
 console.log(packedList);
 // [
 //     { width: 105, height: 68, x: 117, y: 314 },
@@ -46,7 +48,8 @@ console.log(packedList);
 ### 在原有对象列表上扩展
 
 ```javascript
-import rectanglePacker from "rectangle-packer";
+import { rectanglePackerMutation } from "rectangle-packer";
+
 const list = [
     { width: 105, height: 68 },
     { width: 117, height: 115 },
@@ -55,7 +58,7 @@ const list = [
     { width: 3, height: 3 },
 ];
 
-rectanglePacker(list, true);
+rectanglePackerMutation(list);
 
 console.log(list);
 // [
