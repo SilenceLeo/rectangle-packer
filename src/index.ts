@@ -1,2 +1,2 @@
-export { rectanglePacker, rectanglePackerMutation, IRectangle, IRectangleSize } from "./rectanglePacker";
-export default rectanglePacker;
+export { rectanglePacker, rectanglePackerMutation, Rectangle, RectangleSize } from "./rectanglePacker";
+export { rectanglePacker as default } from "./rectanglePacker";

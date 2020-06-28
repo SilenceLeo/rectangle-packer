@@ -14,7 +14,7 @@ enum TheState {
 /**
  * 矩形接口
  */
-export interface IRectangle {
+export interface Rectangle {
     width: number;
     height: number;
     x?: number;
@@ -25,7 +25,7 @@ export interface IRectangle {
 /**
  * 包围区域
  */
-export interface IRectangleSize {
+export interface RectangleSize {
     width: number;
     height: number;
 }
@@ -77,7 +77,7 @@ interface IRegion {
     cellR: IRange;
 }
 
-function sortForAreaOrHeight(ar: IRectangleSize, br: IRectangleSize) {
+function sortForAreaOrHeight(ar: RectangleSize, br: RectangleSize) {
     const a = ar.width * ar.height;
     const b = br.width * br.height;
     if (a < b) {
@@ -227,7 +227,7 @@ function stepOffset(base: ICell | null, offset: number): ICell | null {
  * @param rectangle 矩形
  * @param reg 位置
  */
-function findRegion(placing: IPlacing, rectangle: IRectangle, reg: IRegion): 0 | 1 {
+function findRegion(placing: IPlacing, rectangle: Rectangle, reg: IRegion): 0 | 1 {
     // 遍历所有列
     for (let col = placing.cols, i = 0; col != null; col = col.nextCol, i++) {
         const colR: IRange = {
@@ -354,7 +354,7 @@ function split(placing: IPlacing, reg: IRegion): 0 | 1 {
  * @param rectangle 矩形
  * @param reg Region
  */
-function update(placing: IPlacing, rectangle: IRectangle, reg: IRegion): 0 | 1 {
+function update(placing: IPlacing, rectangle: Rectangle, reg: IRegion): 0 | 1 {
     if (!rectangle.__id || rectangle.__id === 0) {
         console.error(`Error. Rectangle can't have id = ${rectangle.__id}.\n`);
         return FAIL;
@@ -390,7 +390,7 @@ function update(placing: IPlacing, rectangle: IRectangle, reg: IRegion): 0 | 1 {
     return SUCCESS;
 }
 
-function addRec(p: IPlacing, r: IRectangle): 0 | 1 {
+function addRec(p: IPlacing, r: Rectangle): 0 | 1 {
     const reg: IRegion = {
         colR: {
             startIndex: 0,
@@ -427,7 +427,7 @@ function addRec(p: IPlacing, r: IRectangle): 0 | 1 {
  * @param enclosingWidth 容器宽度
  * @param enclosingHeight 容器高度
  */
-function doPlacing(list: IRectangle[], enclosingWidth: number, enclosingHeight: number): 0 | 1 {
+function doPlacing(list: Rectangle[], enclosingWidth: number, enclosingHeight: number): 0 | 1 {
     let p: IPlacing | null = allocPlacing(enclosingWidth, enclosingHeight);
     const len: number = list.length;
 
@@ -447,7 +447,7 @@ function doPlacing(list: IRectangle[], enclosingWidth: number, enclosingHeight: 
  * 计算所有矩形的宽高和
  * @param list 矩形列表
  */
-function sumWH(list: IRectangle[]): IRectangleSize {
+function sumWH(list: Rectangle[]): RectangleSize {
     const len = list.length;
     let width = 0;
     let height = 0;
@@ -465,7 +465,7 @@ function sumWH(list: IRectangle[]): IRectangleSize {
  * 查找所有矩形中，宽度最大值与高度最大值
  * @param list 矩形列表
  */
-function maxWH(list: IRectangle[]): IRectangleSize {
+function maxWH(list: Rectangle[]): RectangleSize {
     const len = list.length;
     let width = 0;
     let height = 0;
@@ -488,7 +488,7 @@ function maxWH(list: IRectangle[]): IRectangleSize {
  * 计算所有矩形总面积
  * @param list 矩形列表
  */
-function totalArea(list: IRectangle[]): number {
+function totalArea(list: Rectangle[]): number {
     const len = list.length;
     let area = 0;
     for (let i = 0; i < len; i++) {
@@ -501,7 +501,7 @@ function totalArea(list: IRectangle[]): number {
  * 计算容器需要的最大宽度
  * @param list 矩形列表
  */
-function placingWidth(list: IRectangle[]): number {
+function placingWidth(list: Rectangle[]): number {
     const len = list.length;
     let width = 0;
     for (let i = 0; i < len; i++) {
@@ -521,7 +521,7 @@ function placingWidth(list: IRectangle[]): number {
  * @param list 矩形列表
  * @param en 初始区域
  */
-function areapackAlgorithm(list: IRectangle[], en: IRectangleSize): 0 | 1 {
+function areapackAlgorithm(list: Rectangle[], en: RectangleSize): 0 | 1 {
     const { width: maxWidth, height: maxHeight } = maxWH(list);
     const { width: sumWidth } = sumWH(list);
     let minWidth = -1;
@@ -616,10 +616,10 @@ function areapackAlgorithm(list: IRectangle[], en: IRectangleSize): 0 | 1 {
  * 打包给到的所有矩形
  * @param rectangleSizes 带有宽高的矩形列表
  */
-export function rectanglePacker<T extends IRectangle>(rectangleSizes: T[]): IRectangle[] {
+export function rectanglePacker<T extends RectangleSize>(rectangleSizes: T[]): Rectangle[] {
     if (!Array.isArray(rectangleSizes) || rectangleSizes.length === 0) return [];
 
-    const enclosing: IRectangle = { width: 0, height: 0 };
+    const enclosing: Rectangle = { width: 0, height: 0 };
 
     const rectList = rectangleSizes.map(({ width, height }, i) => {
         if (!width || !height) throw new Error("Rectangle width and height must be an integer");
@@ -644,7 +644,7 @@ export function rectanglePacker<T extends IRectangle>(rectangleSizes: T[]): IRec
     return rectList;
 }
 
-export function rectanglePackerMutation<T extends IRectangle>(rectangleSizes: T[]): T[] {
+export function rectanglePackerMutation<T extends Rectangle>(rectangleSizes: T[]): (T & Rectangle)[] {
     const list = rectanglePacker(rectangleSizes);
 
     rectangleSizes.forEach((rs, i) => {

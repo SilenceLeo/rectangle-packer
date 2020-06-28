@@ -1,8 +1,9 @@
 {
     "name": "rectangle-packer",
-    "version": "0.0.4",
+    "version": "0.0.7",
     "author": "SilenceLeo <ly.liyang521@gmail.com>",
     "main": "lib/index.js",
+    "module": "esm/index.js",
     "types": "type/index.d.ts",
     "description": "Rectangle Packer",
     "keywords": [
@@ -14,6 +15,7 @@
     ],
     "files": [
         "lib",
+        "esm",
         "type"
     ],
     "license": "MIT",
@@ -27,7 +29,9 @@
     },
     "scripts": {
         "start": "tsc -w",
-        "build": "tsc",
+        "build": "npm run build:umd && npm run build:esm",
+        "build:umd": "tsc",
+        "build:esm": "tsc --module es2015 --target es5 --allowSyntheticDefaultImports --esModuleInterop --outDir esm",
         "format": "prettier --write \"src/**/*.(t|j)s\"",
         "lint": "tslint --fix -p tsconfig.json",
         "fix": "yarn lint && yarn format"
