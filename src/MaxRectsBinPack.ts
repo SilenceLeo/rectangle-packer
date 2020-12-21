@@ -13,8 +13,10 @@ interface RefNumber {
 }
 
 export default class MaxRectsBinPack {
-    public FreeRectChoiceHeuristic = FreeRectChoiceHeuristic;
+    static FreeRectChoiceHeuristic = FreeRectChoiceHeuristic;
+
     private usedRectangles: Rect[] = [];
+
     private freeRectangles: Rect[] = [];
 
     constructor(private binWidth: number = 0, private binHeight: number = 0, private binAllowFlip: boolean = false) {
