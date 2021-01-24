@@ -25,19 +25,19 @@ enum GuillotineSplitHeuristic {
     SplitLongerAxis, ///< -LAS
 }
 
-export default class GuillotineBinPack {
-    public usedRectangles: Rect[] = [];
+export default class GuillotineBinPack<T extends Rect> {
+    public usedRectangles: T[] = [];
     public freeRectangles: Rect[] = [];
     static FreeRectChoiceHeuristic = FreeRectChoiceHeuristic;
     static GuillotineSplitHeuristic = GuillotineSplitHeuristic;
-    constructor(public binWidth: number = 0, public binHeight: number = 0) {
+    constructor(public binWidth: number = 0, public binHeight: number = 0, public allowFlip: boolean = false) {
         if (this.binWidth && this.binHeight) {
             this.freeRectangles.push(new Rect(0, 0, this.binWidth, this.binHeight));
         }
     }
 
     InsertSizes(
-        rects: RectSize[],
+        rects: T[],
         merge: boolean,
         rectChoice: FreeRectChoiceHeuristic,
         splitMethod: GuillotineSplitHeuristic
@@ -57,8 +57,8 @@ export default class GuillotineBinPack {
                 for (let j = 0; j < rects.length; ++j) {
                     // If this rectangle is a perfect match, we pick it instantly.
                     if (
-                        rects[j].width == this.freeRectangles[i].width &&
-                        rects[j].height == this.freeRectangles[i].height
+                        rects[j].width === this.freeRectangles[i].width &&
+                        rects[j].height === this.freeRectangles[i].height
                     ) {
                         bestFreeRect = i;
                         bestRect = j;
@@ -69,8 +69,9 @@ export default class GuillotineBinPack {
                     }
                     // If flipping this rectangle is a perfect match, pick that then.
                     else if (
-                        rects[j].height == this.freeRectangles[i].width &&
-                        rects[j].width == this.freeRectangles[i].height
+                        this.allowFlip &&
+                        rects[j].height === this.freeRectangles[i].width &&
+                        rects[j].width === this.freeRectangles[i].height
                     ) {
                         bestFreeRect = i;
                         bestRect = j;
@@ -99,6 +100,7 @@ export default class GuillotineBinPack {
                     }
                     // If not, then perhaps flipping sideways will make it fit?
                     else if (
+                        this.allowFlip &&
                         rects[j].height <= this.freeRectangles[i].width &&
                         rects[j].width <= this.freeRectangles[i].height
                     ) {
@@ -119,14 +121,20 @@ export default class GuillotineBinPack {
             }
 
             // If we didn't manage to find any rectangle to pack, abort.
-            if (bestScore == Number.MAX_VALUE) return;
+            if (bestScore === Number.MAX_VALUE) return;
+
+            // Remove the rectangle we just packed from the input list.
+            const [node] = rects.splice(bestRect, 1);
+
+            node.x = this.freeRectangles[bestFreeRect].x;
+            node.y = this.freeRectangles[bestFreeRect].y;
 
             // Otherwise, we're good to go and do the actual packing.
             const newNode = new Rect(
                 this.freeRectangles[bestFreeRect].x,
                 this.freeRectangles[bestFreeRect].y,
-                rects[bestRect].width,
-                rects[bestRect].height
+                node.width,
+                node.height
             );
 
             if (bestFlipped) [newNode.width, newNode.height] = [newNode.height, newNode.width];
@@ -135,17 +143,14 @@ export default class GuillotineBinPack {
             this.SplitFreeRectByHeuristic(this.freeRectangles[bestFreeRect], newNode, splitMethod);
             this.freeRectangles.splice(bestFreeRect, 1);
 
-            // Remove the rectangle we just packed from the input list.
-            rects.splice(bestRect, 1);
-
             // Perform a Rectangle Merge step if desired.
             if (merge) this.MergeFreeList();
 
             // Remember the new used rectangle.
-            this.usedRectangles.push(newNode);
+            this.usedRectangles.push(node);
 
             // Check that we're really producing correct packings here.
-            // debug_assert(disjointRects.Add(newNode) == true);
+            // debug_assert(disjointRects.Add(newNode) === true);
         }
     }
 
@@ -160,40 +165,49 @@ export default class GuillotineBinPack {
     /// @return True if r fits perfectly inside freeRect, i.e. the leftover area is 0.
     FitsPerfectly(r: RectSize, freeRect: Rect): boolean {
         return (
-            (r.width == freeRect.width && r.height == freeRect.height) ||
-            (r.height == freeRect.width && r.width == freeRect.height)
+            (r.width === freeRect.width && r.height === freeRect.height) ||
+            (r.height === freeRect.width && r.width === freeRect.height)
         );
     }
 
-    Insert(
-        width: number,
-        height: number,
-        merge: boolean,
-        rectChoice: FreeRectChoiceHeuristic,
-        splitMethod: GuillotineSplitHeuristic
-    ): Rect {
-        // Find where to put the new rectangle.
-        let freeNodeIndex: RefNumber = { value: 0 };
-        const newRect: Rect = this.FindPositionForNewNode(width, height, rectChoice, freeNodeIndex);
+    //   Insert(
+    //     width: number,
+    //     height: number,
+    //     merge: boolean,
+    //     rectChoice: FreeRectChoiceHeuristic,
+    //     splitMethod: GuillotineSplitHeuristic,
+    //   ): Rect {
+    //     // Find where to put the new rectangle.
+    //     let freeNodeIndex: RefNumber = { value: 0 }
+    //     const newRect: Rect = this.FindPositionForNewNode(
+    //       width,
+    //       height,
+    //       rectChoice,
+    //       freeNodeIndex,
+    //     )
 
-        // Abort if we didn't have enough space in the bin.
-        if (newRect.height == 0) return newRect;
+    //     // Abort if we didn't have enough space in the bin.
+    //     if (newRect.height === 0) return newRect
 
-        // Remove the space that was just consumed by the new rectangle.
-        this.SplitFreeRectByHeuristic(this.freeRectangles[freeNodeIndex.value], newRect, splitMethod);
-        this.freeRectangles.splice(freeNodeIndex.value, 1);
+    //     // Remove the space that was just consumed by the new rectangle.
+    //     this.SplitFreeRectByHeuristic(
+    //       this.freeRectangles[freeNodeIndex.value],
+    //       newRect,
+    //       splitMethod,
+    //     )
+    //     this.freeRectangles.splice(freeNodeIndex.value, 1)
 
-        // Perform a Rectangle Merge step if desired.
-        if (merge) this.MergeFreeList();
+    //     // Perform a Rectangle Merge step if desired.
+    //     if (merge) this.MergeFreeList()
 
-        // Remember the new used rectangle.
-        this.usedRectangles.push(newRect);
+    //     // Remember the new used rectangle.
+    //     this.usedRectangles.push(newRect)
 
-        // Check that we're really producing correct packings here.
-        // debug_assert(disjointRects.Add(newRect) == true);
+    //     // Check that we're really producing correct packings here.
+    //     // debug_assert(disjointRects.Add(newRect) === true);
 
-        return newRect;
-    }
+    //     return newRect
+    //   }
 
     /// Computes the ratio of used surface area to the total bin area.
     Occupancy(): number {
@@ -269,7 +283,7 @@ export default class GuillotineBinPack {
         /// Try each free rectangle to find the best one for placement.
         for (let i = 0; i < this.freeRectangles.length; ++i) {
             // If this is a perfect fit upright, choose it immediately.
-            if (width == this.freeRectangles[i].width && height == this.freeRectangles[i].height) {
+            if (width === this.freeRectangles[i].width && height === this.freeRectangles[i].height) {
                 bestNode.x = this.freeRectangles[i].x;
                 bestNode.y = this.freeRectangles[i].y;
                 bestNode.width = width;
@@ -280,7 +294,7 @@ export default class GuillotineBinPack {
                 break;
             }
             // If this is a perfect fit sideways, choose it.
-            else if (height == this.freeRectangles[i].width && width == this.freeRectangles[i].height) {
+            else if (height === this.freeRectangles[i].width && width === this.freeRectangles[i].height) {
                 bestNode.x = this.freeRectangles[i].x;
                 bestNode.y = this.freeRectangles[i].y;
                 bestNode.width = height;
@@ -344,12 +358,12 @@ export default class GuillotineBinPack {
                 splitHorizontal = w > h;
                 break;
             case GuillotineSplitHeuristic.SplitMinimizeArea:
-                // Maximize the larger area == minimize the smaller area.
+                // Maximize the larger area === minimize the smaller area.
                 // Tries to make the single bigger rectangle.
                 splitHorizontal = placedRect.width * h > w * placedRect.height;
                 break;
             case GuillotineSplitHeuristic.SplitMaximizeArea:
-                // Maximize the smaller area == minimize the larger area.
+                // Maximize the smaller area === minimize the larger area.
                 // Tries to make the rectangles more even-sized.
                 splitHorizontal = placedRect.width * h <= w * placedRect.height;
                 break;
@@ -406,29 +420,29 @@ export default class GuillotineBinPack {
         for (let i = 0; i < this.freeRectangles.length; ++i)
             for (let j = i + 1; j < this.freeRectangles.length; ++j) {
                 if (
-                    this.freeRectangles[i].width == this.freeRectangles[j].width &&
-                    this.freeRectangles[i].x == this.freeRectangles[j].x
+                    this.freeRectangles[i].width === this.freeRectangles[j].width &&
+                    this.freeRectangles[i].x === this.freeRectangles[j].x
                 ) {
-                    if (this.freeRectangles[i].y == this.freeRectangles[j].y + this.freeRectangles[j].height) {
+                    if (this.freeRectangles[i].y === this.freeRectangles[j].y + this.freeRectangles[j].height) {
                         this.freeRectangles[i].y -= this.freeRectangles[j].height;
                         this.freeRectangles[i].height += this.freeRectangles[j].height;
                         this.freeRectangles.splice(j, 1);
                         --j;
-                    } else if (this.freeRectangles[i].y + this.freeRectangles[i].height == this.freeRectangles[j].y) {
+                    } else if (this.freeRectangles[i].y + this.freeRectangles[i].height === this.freeRectangles[j].y) {
                         this.freeRectangles[i].height += this.freeRectangles[j].height;
                         this.freeRectangles.splice(j, 1);
                         --j;
                     }
                 } else if (
-                    this.freeRectangles[i].height == this.freeRectangles[j].height &&
-                    this.freeRectangles[i].y == this.freeRectangles[j].y
+                    this.freeRectangles[i].height === this.freeRectangles[j].height &&
+                    this.freeRectangles[i].y === this.freeRectangles[j].y
                 ) {
-                    if (this.freeRectangles[i].x == this.freeRectangles[j].x + this.freeRectangles[j].width) {
+                    if (this.freeRectangles[i].x === this.freeRectangles[j].x + this.freeRectangles[j].width) {
                         this.freeRectangles[i].x -= this.freeRectangles[j].width;
                         this.freeRectangles[i].width += this.freeRectangles[j].width;
                         this.freeRectangles.splice(j, 1);
                         --j;
-                    } else if (this.freeRectangles[i].x + this.freeRectangles[i].width == this.freeRectangles[j].x) {
+                    } else if (this.freeRectangles[i].x + this.freeRectangles[i].width === this.freeRectangles[j].x) {
                         this.freeRectangles[i].width += this.freeRectangles[j].width;
                         this.freeRectangles.splice(j, 1);
                         --j;
