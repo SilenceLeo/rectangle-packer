@@ -1,6 +1,6 @@
 {
     "name": "rectangle-packer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": "SilenceLeo <ly.liyang521@gmail.com>",
     "description": "A high-performance TypeScript library for 2D rectangle packing algorithms. Implements area-based packing and Guillotine bin packing with multiple heuristics for optimal space utilization.",
     "keywords": [
