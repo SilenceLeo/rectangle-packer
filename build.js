@@ -30,6 +30,12 @@ function buildESM() {
   execSync('npx tsc --project tsconfig.json', { stdio: 'inherit' });
 }
 
+// 为ES模块添加扩展名
+function addExtensions() {
+  console.log('🔧 为ES模块添加扩展名...');
+  execSync('node scripts/add-extensions.js', { stdio: 'inherit' });
+}
+
 // 创建 package.json 文件用于不同格式
 function createPackageJson() {
   console.log('📄 创建格式特定的 package.json...');
@@ -60,6 +66,7 @@ function build() {
     buildTypes();
     buildCJS();
     buildESM();
+    addExtensions();
     createPackageJson();
     console.log('✅ 构建完成！');
   } catch (error) {

@@ -14,7 +14,7 @@
     "noUncheckedIndexedAccess": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
@@ -22,7 +22,8 @@
     "sourceMap": true,
     "removeComments": false,
     "outDir": "./dist/esm",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "moduleDetection": "force"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/__tests__/*", "**/*.test.ts", "**/*.spec.ts"]
