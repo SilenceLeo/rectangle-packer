@@ -1,15 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "UMD",
+    "target": "es2018",
+    "module": "esnext",
+    "lib": ["es2018", "es2019", "es2020"],
     "declaration": true,
+    "declarationMap": true,
     "strict": true,
-    "outDir": "./lib",
-    "declarationDir": "./type",
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "sourceMap": true
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "outDir": "./dist/esm",
+    "rootDir": "./src"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/__tests__/*", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -1,4 +1,4 @@
-import Rect, { RectSize } from "./Rect";
+import Rect, { RectSize } from './Rect';
 
 interface RefNumber {
     value: number;
@@ -30,7 +30,11 @@ export default class GuillotineBinPack<T extends Rect> {
     public freeRectangles: Rect[] = [];
     static FreeRectChoiceHeuristic = FreeRectChoiceHeuristic;
     static GuillotineSplitHeuristic = GuillotineSplitHeuristic;
-    constructor(public binWidth: number = 0, public binHeight: number = 0, public allowFlip: boolean = false) {
+    constructor(
+        public binWidth: number = 0,
+        public binHeight: number = 0,
+        public allowFlip: boolean = false
+    ) {
         if (this.binWidth && this.binHeight) {
             this.freeRectangles.push(new Rect(0, 0, this.binWidth, this.binHeight));
         }
@@ -42,6 +46,18 @@ export default class GuillotineBinPack<T extends Rect> {
         rectChoice: FreeRectChoiceHeuristic,
         splitMethod: GuillotineSplitHeuristic
     ): void {
+        if (!Array.isArray(rects) || rects.length === 0) {
+            return;
+        }
+
+        // Validate input rectangles
+        for (const rect of rects) {
+            if (!rect || rect.width < 0 || rect.height < 0) {
+                console.error('Invalid rectangle dimensions');
+                return;
+            }
+        }
+
         // Remember variables about the best packing choice we have made so far during the iteration process.
         let bestFreeRect = 0;
         let bestRect = 0;
@@ -211,11 +227,7 @@ export default class GuillotineBinPack<T extends Rect> {
 
     /// Computes the ratio of used surface area to the total bin area.
     Occupancy(): number {
-        ///\todo The occupancy rate could be cached/tracked incrementally instead
-        ///      of looping through the list of packed rectangles here.
-        let usedSurfaceArea = 0;
-        for (let i = 0; i < this.usedRectangles.length; ++i)
-            usedSurfaceArea += this.usedRectangles[i].width * this.usedRectangles[i].height;
+        const usedSurfaceArea = this.usedRectangles.reduce((area, rect) => area + rect.width * rect.height, 0);
 
         return usedSurfaceArea / (this.binWidth * this.binHeight);
     }
@@ -258,11 +270,11 @@ export default class GuillotineBinPack<T extends Rect> {
         return leftover;
     }
 
-    ScoreWorstAreaFit(width: number, height: number, freeRect: Rect) {
+    ScoreWorstAreaFit(width: number, height: number, freeRect: Rect): number {
         return -this.ScoreBestAreaFit(width, height, freeRect);
     }
 
-    ScoreWorstShortSideFit(width: number, height: number, freeRect: Rect) {
+    ScoreWorstShortSideFit(width: number, height: number, freeRect: Rect): number {
         return -this.ScoreBestShortSideFit(width, height, freeRect);
     }
 

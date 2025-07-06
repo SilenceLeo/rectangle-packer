@@ -77,21 +77,22 @@ interface IRegion {
     cellR: IRange;
 }
 
-function sortForAreaOrHeight(ar: RectangleSize, br: RectangleSize) {
-    const a = ar.width * ar.height;
-    const b = br.width * br.height;
-    if (a < b) {
-        return 1;
-    } else if (a > b) {
-        return -1;
-    } else if (ar.height > br.height) {
-        return -1;
-    } else if (ar.height < br.height) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
+// 未使用的排序函数，可以删除或实现排序逻辑
+// function sortForAreaOrHeight(ar: RectangleSize, br: RectangleSize) {
+//     const a = ar.width * ar.height;
+//     const b = br.width * br.height;
+//     if (a < b) {
+//         return 1;
+//     } else if (a > b) {
+//         return -1;
+//     } else if (ar.height > br.height) {
+//         return -1;
+//     } else if (ar.height < br.height) {
+//         return 1;
+//     } else {
+//         return 0;
+//     }
+// }
 
 /**
  * 创建 Placing
@@ -125,7 +126,7 @@ function allocPlacing(enclosingWidth: number, enclosingHeight: number): IPlacing
  * @param placing 即将释放的 Placing
  */
 function freePlacing(placing: IPlacing): void {
-    if (placing === null) {
+    if (!placing) {
         return;
     }
     // 循环释放列和单元格
@@ -145,7 +146,6 @@ function freePlacing(placing: IPlacing): void {
         tempC.cell = null;
     }
     placing.cols = null;
-    return;
 }
 
 /**
@@ -161,10 +161,10 @@ function tryFitHeightInCol(col: ICol, height: number, cellR: IRange): 0 | 1 {
      * 结果存储在 cellR 中
      */
     if (col == null) {
-        console.error("Error. col pointer was null.\n");
+        console.error('Error. col pointer was null.\n');
         return FAIL;
     } else if (height <= 0) {
-        console.error("Error. height must be positive.\n");
+        console.error('Error. height must be positive.\n');
         return FAIL;
     }
 
@@ -205,7 +205,7 @@ function tryFitHeightInCol(col: ICol, height: number, cellR: IRange): 0 | 1 {
  */
 function stepOffset(base: ICell | null, offset: number): ICell | null {
     if (base == null) {
-        console.error("Error. Basepointer was null.\n");
+        console.error('Error. Basepointer was null.\n');
         return null;
     }
 
@@ -214,7 +214,7 @@ function stepOffset(base: ICell | null, offset: number): ICell | null {
     for (let i = 0; i < offset; i++) {
         cell = cell.nextCell;
         if (cell == null) {
-            console.error("Error. Offset to large.\n");
+            console.error('Error. Offset to large.\n');
             return null;
         }
     }
@@ -308,7 +308,7 @@ function split(placing: IPlacing, reg: IRegion): 0 | 1 {
     if (reg.colR.overshoot > 0) {
         // 纵向拆分列
         if (colSplitMe == null) {
-            console.log("Error. Failed to find column to split.\n");
+            console.log('Error. Failed to find column to split.\n');
             return FAIL;
         }
 
@@ -409,12 +409,12 @@ function addRec(p: IPlacing, r: Rectangle): 0 | 1 {
     }
 
     if (split(p, reg) === FAIL) {
-        console.error("Error in splitting.\n");
+        console.error('Error in splitting.\n');
         return FAIL;
     }
 
     if (update(p, r, reg) === FAIL) {
-        console.error("Error in updating.\n");
+        console.error('Error in updating.\n');
         return FAIL;
     }
 
@@ -448,17 +448,13 @@ function doPlacing(list: Rectangle[], enclosingWidth: number, enclosingHeight: n
  * @param list 矩形列表
  */
 function sumWH(list: Rectangle[]): RectangleSize {
-    const len = list.length;
-    let width = 0;
-    let height = 0;
-    for (let i = 0; i < len; i++) {
-        width += list[i].width;
-        height += list[i].height;
-    }
-    return {
-        width,
-        height,
-    };
+    return list.reduce(
+        (acc, rect) => ({
+            width: acc.width + rect.width,
+            height: acc.height + rect.height,
+        }),
+        { width: 0, height: 0 }
+    );
 }
 
 /**
@@ -466,22 +462,13 @@ function sumWH(list: Rectangle[]): RectangleSize {
  * @param list 矩形列表
  */
 function maxWH(list: Rectangle[]): RectangleSize {
-    const len = list.length;
-    let width = 0;
-    let height = 0;
-
-    for (let i = 0; i < len; i++) {
-        if (list[i].width >= width) {
-            width = list[i].width;
-        }
-        if (list[i].height >= height) {
-            height = list[i].height;
-        }
-    }
-    return {
-        width,
-        height,
-    };
+    return list.reduce(
+        (acc, rect) => ({
+            width: Math.max(acc.width, rect.width),
+            height: Math.max(acc.height, rect.height),
+        }),
+        { width: 0, height: 0 }
+    );
 }
 
 /**
@@ -489,12 +476,7 @@ function maxWH(list: Rectangle[]): RectangleSize {
  * @param list 矩形列表
  */
 function totalArea(list: Rectangle[]): number {
-    const len = list.length;
-    let area = 0;
-    for (let i = 0; i < len; i++) {
-        area += list[i].height * list[i].width;
-    }
-    return area;
+    return list.reduce((area, rect) => area + rect.height * rect.width, 0);
 }
 
 /**
@@ -502,15 +484,15 @@ function totalArea(list: Rectangle[]): number {
  * @param list 矩形列表
  */
 function placingWidth(list: Rectangle[]): number {
-    const len = list.length;
     let width = 0;
-    for (let i = 0; i < len; i++) {
-        if (list[i].x === -1) {
+    for (const rect of list) {
+        if (rect.x === undefined || rect.x === -1) {
             console.error("Error. Can't compute placing_width if not all rectangles have been placed.\n");
             return -1;
         }
-        if (list[i].width + (list[i].x as number) >= width) {
-            width = list[i].width + (list[i].x as number);
+        const rectRight = rect.width + rect.x;
+        if (rectRight > width) {
+            width = rectRight;
         }
     }
     return width;
@@ -622,7 +604,9 @@ export function rectanglePacker<T extends RectangleSize>(rectangleSizes: T[]): R
     const enclosing: Rectangle = { width: 0, height: 0 };
 
     const rectList = rectangleSizes.map(({ width, height }, i) => {
-        if (!width || !height) throw new Error("Rectangle width and height must be an integer");
+        if (!width || !height || width <= 0 || height <= 0) {
+            throw new Error(`Rectangle at index ${i} must have positive width and height, got: ${width}x${height}`);
+        }
         return {
             width,
             height,
@@ -635,11 +619,15 @@ export function rectanglePacker<T extends RectangleSize>(rectangleSizes: T[]): R
     const result = areapackAlgorithm(rectList, enclosing);
 
     if (result === FAIL) {
-        console.error("Unexpected error in algorithm implementation");
+        console.error('Unexpected error in algorithm implementation');
         return [];
     }
 
-    rectList.forEach((rectangle) => delete rectangle.__id);
+    rectList.forEach((rectangle) => {
+        if (rectangle.__id !== undefined) {
+            delete rectangle.__id;
+        }
+    });
 
     return rectList;
 }
