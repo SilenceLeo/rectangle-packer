@@ -29,6 +29,33 @@ yarn add rectangle-packer
 
 ## 🎯 Quick Start
 
+### Guillotine Bin Packing
+
+```typescript
+import GuillotineBinPack, { Rect } from 'rectangle-packer';
+
+// Create a bin packer with specified dimensions
+const packer = new GuillotineBinPack(500, 400);
+
+// Create rectangles
+const rectangles = [
+  new Rect(0, 0, 100, 50),
+  new Rect(0, 0, 75, 75),
+  new Rect(0, 0, 200, 100)
+];
+
+// Pack rectangles using different heuristics
+packer.InsertSizes(
+  rectangles,
+  true, // merge free rectangles
+  GuillotineBinPack.FreeRectChoiceHeuristic.RectBestAreaFit,
+  GuillotineBinPack.GuillotineSplitHeuristic.SplitShorterLeftoverAxis
+);
+
+console.log(packer.usedRectangles);
+console.log(packer.Occupancy()); // Get occupancy percentage
+```
+
 ### Basic Usage
 
 ```typescript
@@ -69,33 +96,6 @@ const result = rectanglePackerMutation(rectangles);
 
 console.log(rectangles); // Original array is modified
 console.log(result); // Same as rectangles
-```
-
-### Guillotine Bin Packing
-
-```typescript
-import GuillotineBinPack, { Rect } from 'rectangle-packer';
-
-// Create a bin packer with specified dimensions
-const packer = new GuillotineBinPack(500, 400);
-
-// Create rectangles
-const rectangles = [
-  new Rect(0, 0, 100, 50),
-  new Rect(0, 0, 75, 75),
-  new Rect(0, 0, 200, 100)
-];
-
-// Pack rectangles using different heuristics
-packer.InsertSizes(
-  rectangles,
-  true, // merge free rectangles
-  GuillotineBinPack.FreeRectChoiceHeuristic.RectBestAreaFit,
-  GuillotineBinPack.GuillotineSplitHeuristic.SplitShorterLeftoverAxis
-);
-
-console.log(packer.usedRectangles);
-console.log(packer.Occupancy()); // Get occupancy percentage
 ```
 
 ## 📚 API Reference
@@ -337,8 +337,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you have any questions or need help, please:
 
-1. Check the [documentation](#api-reference)
-2. Look at the [examples](#examples)
+1. Check the [documentation](#-api-reference)
+2. Look at the [examples](#-examples)
 3. Open an [issue](https://github.com/SilenceLeo/rectangle-packer/issues)
 
 ---
