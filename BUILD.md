@@ -16,18 +16,6 @@ npm run build
 ```
 这会生成所有格式的输出到 `dist/` 目录。
 
-### 单独构建
-```bash
-# 构建类型声明
-npm run build:types
-
-# 构建 CommonJS
-npm run build:cjs
-
-# 构建 ESM
-npm run build:esm
-```
-
 ### 开发模式
 ```bash
 npm run dev
